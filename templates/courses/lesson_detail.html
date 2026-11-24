@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block title %}Урок {{ lesson_number }}. {{ lesson.title }} — CodePath AI{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+  <a href="{% url 'language_list' %}">Каталог курсов</a><span aria-hidden="true">/</span>
+  <a href="{% url 'language_detail' lesson.course.language.slug %}">{{ lesson.course.language.name }}</a><span aria-hidden="true">/</span>
+  <a href="{% url 'course_detail' lesson.course.id %}">{{ lesson.course.get_level_display }}</a>
+</div>
+
+<header class="lesson-heading">
+  <p class="eyebrow">УРОК {{ lesson_number }}</p>
+  <h1>{{ lesson.title }}</h1>
+  <div class="lesson-meta">
+    <span class="badge badge-accent">{{ lesson.course.language.name }} · {{ lesson.course.get_level_display }}</span>
+    {% if lesson.block_title %}<span class="badge">{{ lesson.block_title }}</span>{% endif %}
+    {% if progress.completed %}<span class="badge badge-accent">✓ Пройден</span>{% else %}<span class="badge badge-gold">+{{ lesson.xp_reward }} XP</span>{% endif %}
+  </div>
+</header>
+
+<section class="card">
+  <p class="eyebrow">РАЗБЕРИТЕСЬ В ТЕМЕ</p>
+  <h2>Теория</h2>
+  <div class="theory-copy">{{ lesson.theory|linebreaks }}</div>
+</section>
+
+{% if code_examples %}
+  <section>
+    <div class="section-heading"><div><p class="eyebrow">ПОШАГОВЫЕ ПРИМЕРЫ</p><h2>Посмотрите, как это работает</h2></div></div>
+    {% for example in code_examples %}
+      <article class="card example-card">
+        <h3>{% if example.title %}{{ example.title }}{% else %}Пример {{ forloop.counter }}{% endif %}</h3>
+        <pre><code>{{ example.code }}</code></pre>
+        {% if example.explanation %}<p class="example-explanation">{{ example.explanation|linebreaks }}</p>{% endif %}
+      </article>
+    {% endfor %}
+  </section>
+{% endif %}
+
+{% if tasks %}
+  <section class="card task-list-card">
+    <div class="section-heading">
+      <div><p class="eyebrow">ПРАКТИКА</p><h2>Задания</h2></div>
+      <span class="badge badge-gold">{{ solved_ids|length }} / {{ tasks|length }} решено</span>
+    </div>
+    <p class="muted">Урок можно отметить пройденным после верного решения всех заданий.</p>
+    {% for task in tasks %}
+      <article class="task-card">
+        <div class="task-heading">
+          <p class="task-question">
+            {% if task.is_code_task %}<strong>{{ task.question }}</strong>{% else %}<strong>{{ task.get_task_type_display }} {{ forloop.counter }}.</strong> {{ task.question }}{% endif %}
+          </p>
+          {% if task.id in solved_ids %}<span class="badge badge-accent">✓ Решено</span>{% endif %}
+        </div>
+        {% if task.hint %}<p class="task-hint">💡 Подсказка: {{ task.hint }}</p>{% endif %}
+        {% if task.id not in solved_ids %}
+          <form class="styled task-form" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="task_id" value="{{ task.id }}">
+            {% if task.is_code_task %}
+              <label class="code-editor-label" for="task-answer-{{ task.id }}">Ваш код</label>
+              <textarea id="task-answer-{{ task.id }}" class="code-editor" name="answer" rows="9" wrap="off" placeholder="Напишите код здесь…" aria-label="Код для задания {{ forloop.counter }}" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off"></textarea>
+              <p class="code-editor-help">Tab вставляет отступ в четыре пробела.</p>
+            {% else %}
+              <label for="task-answer-{{ task.id }}">Ваш ответ</label>
+              <input id="task-answer-{{ task.id }}" type="text" name="answer" placeholder="Введите ответ…" autocomplete="off">
+            {% endif %}
+            <button class="btn btn-secondary" type="submit">Проверить ответ <span aria-hidden="true">→</span></button>
+          </form>
+        {% endif %}
+      </article>
+    {% endfor %}
+  </section>
+{% endif %}
+
+<section class="card assistant-note">
+  <div>
+    <p class="eyebrow">ПОДСКАЗКА</p>
+    <h3>Нужна помощь?</h3>
+    <p class="muted">AI-помощник поможет разобраться в задании — эта функция скоро появится.</p>
+  </div>
+  <button class="btn btn-secondary" type="button" disabled>AI-помощник скоро появится</button>
+</section>
+
+<section class="card lesson-completion">
+  <div>
+    <p class="eyebrow">СЛЕДУЮЩИЙ ШАГ</p>
+    {% if progress.completed %}
+      <h3>Урок пройден</h3>
+      <p class="muted">Вы можете вернуться к программе курса.</p>
+    {% elif can_complete %}
+      <h3>Готовы продолжить?</h3>
+      <p class="muted">Все задания решены — отметьте урок пройденным.</p>
+    {% else %}
+      <h3>Завершите задания</h3>
+      <p class="muted">Решите все задания выше, чтобы перейти к следующему уроку.</p>
+    {% endif %}
+  </div>
+  {% if progress.completed %}
+    <a class="btn btn-secondary" href="{% url 'course_detail' lesson.course.id %}">К программе курса</a>
+  {% elif can_complete %}
+    <form method="post" action="{% url 'complete_lesson' lesson.id %}">
+      {% csrf_token %}
+      <button class="btn" type="submit">Завершить урок <span aria-hidden="true">→</span></button>
+    </form>
+  {% else %}
+    <button class="btn" type="button" disabled>Сначала решите задания</button>
+  {% endif %}
+</section>
+{% endblock %}

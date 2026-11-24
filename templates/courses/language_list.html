@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Каталог курсов — CodePath AI{% endblock %}
+{% block content %}
+<section class="catalog-hero hero-panel">
+  <div class="hero-content"><p class="eyebrow" data-ru="ОБРАЗОВАТЕЛЬНЫЕ ТРЕКИ" data-en="LEARNING PATHS">ОБРАЗОВАТЕЛЬНЫЕ ТРЕКИ</p><h1 data-ru="Каталог программ" data-en="Program catalog">Каталог программ</h1><p data-ru="Ищите язык и открывайте доступные программы. В каталоге показаны только курсы, в которых уже есть уроки." data-en="Search for a language and browse available programs. Only courses with lessons are shown.">Ищите язык и открывайте доступные программы. В каталоге показаны только курсы, в которых уже есть уроки.</p></div>
+  <div class="catalog-search-wrap"><label for="catalogSearch" data-ru="Поиск по языкам и программам" data-en="Search languages and programs">Поиск по языкам и программам</label><div class="catalog-search-field"><svg class="catalog-search-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.6"></circle><path d="m16 16 4.4 4.4"></path></svg><input id="catalogSearch" type="search" data-placeholder-ru="Например, Python, циклы…" data-placeholder-en="Try Python, loops…" placeholder="Например, Python, циклы…" autocomplete="off"></div></div>
+</section>
+
+<div class="catalog-filters" role="group" aria-label="Фильтры каталога">
+  <button class="catalog-filter is-active" type="button" data-cfilter="all" aria-pressed="true" data-ru="Все" data-en="All">Все</button>
+  <button class="catalog-filter" type="button" data-cfilter="active" aria-pressed="false" data-ru="Есть программы" data-en="Available">Есть программы</button>
+  <button class="catalog-filter" type="button" data-cfilter="soon" aria-pressed="false" data-ru="В разработке" data-en="In development">В разработке</button>
+  <button class="catalog-filter" type="button" data-cfilter="beginner" aria-pressed="false" data-ru="Начальный уровень" data-en="Beginner">Начальный уровень</button>
+  <span class="catalog-result-count" id="catalogResultCount">{{ languages|length }} языков</span>
+</div>
+
+<div class="course-grid catalog-grid" id="languageCatalog">
+  {% for language in languages %}
+    <article class="course-card catalog-language-card glass-card-hover" data-language-slug="{{ language.slug }}" data-search="{{ language.search_text|lower }}" data-status="{% if language.course_count %}active{% else %}soon{% endif %}" data-beginner="{{ language.has_beginner_course|yesno:'true,false' }}">
+      <div class="course-card-top">
+        <div><span class="badge badge-accent">{% if language.course_count %}{{ language.course_count }} программ{% else %}Скоро{% endif %}</span><h2><a href="{% url 'language_detail' language.slug %}">{{ language.name }}</a></h2></div>
+        <span class="course-icon" aria-hidden="true">{{ language.icon|default:'⌘' }}</span>
+      </div>
+      <p>{{ language.description|default:'Откройте доступные курсы и выберите следующий шаг.' }}</p>
+      {% if language.catalog_courses %}
+        <ul class="catalog-program-list">
+          {% for course in language.catalog_courses %}<li><a href="{% url 'course_detail' course.id %}"><span>{{ course.get_level_display }}</span><small>{{ course.lessons.count }} уроков</small></a></li>{% endfor %}
+        </ul>
+      {% else %}
+        <p class="catalog-soon-note">Программы для этого языка пока готовятся.</p>
+      {% endif %}
+      <div class="course-card-footer">
+        {% if language.course_count %}<a class="catalog-open-link" href="{% url 'language_detail' language.slug %}">Открыть язык <span aria-hidden="true">→</span></a>
+        {% else %}<button class="btn btn-secondary btn-small catalog-notify-button" type="button" data-language-slug="{{ language.slug }}" data-language-name="{{ language.name }}" data-ru="Следить за запуском" data-en="Follow launch" onclick="toggleLanguageNotice(this)">Следить за запуском</button>{% endif %}
+      </div>
+    </article>
+  {% empty %}<div class="empty-state">Курсы ещё не добавлены.</div>{% endfor %}
+</div>
+<div id="catalogEmptyState" class="empty-state" data-ru="Ничего не найдено. Попробуйте изменить запрос или фильтр." data-en="No results. Try a different search or filter." hidden>Ничего не найдено. Попробуйте изменить запрос или фильтр.</div>
+{% endblock %}

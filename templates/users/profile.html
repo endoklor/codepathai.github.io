@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}Профиль — CodePath AI{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div class="page-heading-copy">
+    <p class="eyebrow" data-ru="ВАШ АККАУНТ" data-en="YOUR ACCOUNT">ВАШ АККАУНТ</p>
+    <div class="profile-title-with-avatar">
+      <div class="profile-avatar-preview" id="profileAvatarPreview" aria-label="Аватар профиля">
+        {% if profile.avatar %}<img id="profileAvatarImage" src="{{ profile.avatar.url }}" alt="Аватар {{ user.username }}">
+        {% else %}<span id="profileAvatarFallback">{{ user.username|first|upper }}</span>{% endif %}
+      </div>
+      <h1><span data-ru="Профиль" data-en="Profile">Профиль</span> {{ user.username }}</h1>
+    </div>
+    <p class="lead" data-ru="Настройте профиль и посмотрите, как продвигается обучение." data-en="Edit your profile and track your learning progress.">Настройте профиль и посмотрите, как продвигается обучение.</p>
+  </div>
+</section>
+
+<section class="stats-grid" aria-label="Статистика пользователя">
+  <article class="stat-card"><div class="label" data-ru="УРОВЕНЬ" data-en="LEVEL">УРОВЕНЬ</div><div class="value">{{ profile.level }}</div><div class="hint" data-ru="Текущий ранг" data-en="Current rank">Текущий ранг</div></article>
+  <article class="stat-card"><div class="label" data-ru="ОПЫТ" data-en="EXPERIENCE">ОПЫТ</div><div class="value">{{ profile.xp }} <small>XP</small></div><div class="hint" data-ru="Накопленные очки" data-en="Experience points">Накопленные очки</div></article>
+  <article class="stat-card"><div class="label" data-ru="СЕРИЯ ДНЕЙ" data-en="DAY STREAK">СЕРИЯ ДНЕЙ</div><div class="value">{{ profile.streak }} <small>🔥</small></div><div class="hint" data-ru="Уроков пройдено: {{ completed_lessons }}" data-en="Lessons completed: {{ completed_lessons }}">Уроков пройдено: {{ completed_lessons }}</div></article>
+</section>
+
+<section class="card profile-level-progress">
+  <div class="hero-progress-top"><span data-ru="Прогресс до следующего уровня" data-en="Progress to next level">Прогресс до следующего уровня</span><strong>{{ xp_in_level }}{% if xp_to_next_level %} / {{ xp_to_next_level }}{% endif %} XP</strong></div>
+  <div class="progress-bar"><div class="fill" style="width:{{ level_progress }}%;"></div></div>
+</section>
+
+<div class="grid cols-2 profile-columns">
+  <section class="card">
+    <p class="eyebrow" data-ru="ЛИЧНЫЕ ДАННЫЕ" data-en="PERSONAL DETAILS">ЛИЧНЫЕ ДАННЫЕ</p>
+    <h2 data-ru="Редактировать профиль" data-en="Edit profile">Редактировать профиль</h2>
+    <form class="styled" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {% for field in form %}
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}
+        {% if field.name == 'avatar' %}<p class="avatar-upload-help" data-ru="Выберите новое изображение для аватара (до 5 МБ). После сохранения оно появится в профиле." data-en="Choose a new profile image (up to 5 MB). It will appear after you save.">Выберите новое изображение для аватара (до 5 МБ). После сохранения оно появится в профиле.</p>{% endif %}
+        {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+      {% endfor %}
+      <button class="btn" type="submit" data-ru="Сохранить" data-en="Save">Сохранить</button>
+    </form>
+  </section>
+
+  <div class="profile-side-stack">
+    <section class="card">
+      <p class="eyebrow" data-ru="ВАШИ РЕЗУЛЬТАТЫ" data-en="YOUR RESULTS">ВАШИ РЕЗУЛЬТАТЫ</p>
+      <h2><span data-ru="Достижения" data-en="Achievements">Достижения</span> <span class="badge badge-gold">{{ achievements.count }}</span></h2>
+      {% if achievements %}
+        <div class="achievement-list">
+          {% for ua in achievements %}<div class="achievement-item"><span class="achievement-icon">{{ ua.achievement.icon|default:'✦' }}</span><div><strong>{{ ua.achievement.title }}</strong><small>{{ ua.achievement.description }}</small></div></div>{% endfor %}
+        </div>
+      {% else %}<p class="muted" data-ru="Пока нет достижений — пройдите первый урок!" data-en="No achievements yet. Complete your first lesson!">Пока нет достижений — пройдите первый урок!</p>{% endif %}
+      <hr class="soft-divider">
+      <p><span data-ru="Пройдено уроков:" data-en="Lessons completed:">Пройдено уроков:</span> <strong>{{ completed_lessons }}</strong></p>
+    </section>
+
+    <section class="card profile-settings">
+      <p class="eyebrow" data-ru="ПЕРСОНАЛИЗАЦИЯ" data-en="PERSONALIZATION">ПЕРСОНАЛИЗАЦИЯ</p>
+      <h2 data-ru="Настройки" data-en="Settings">Настройки</h2>
+      <div class="setting-row">
+        <div><strong data-ru="Язык интерфейса" data-en="Interface language">Язык интерфейса</strong><small data-ru="Перевод подписей интерфейса" data-en="Translate interface labels">Перевод подписей интерфейса</small></div>
+        <div class="setting-buttons"><button type="button" class="btn btn-secondary btn-small" data-locale-button="ru" aria-pressed="true">RU</button><button type="button" class="btn btn-secondary btn-small" data-locale-button="en" aria-pressed="false">EN</button></div>
+      </div>
+      <div class="setting-row">
+        <div><strong data-ru="Фоновый синтезатор" data-en="Ambient synth">Фоновый синтезатор</strong><small data-ru="Мягкий звук для концентрации" data-en="Soft sound for focus">Мягкий звук для концентрации</small></div>
+        <button type="button" class="btn btn-secondary btn-small" data-audio-toggle onclick="toggleAmbientAudio(this)" aria-label="Включить фоновую музыку" aria-pressed="false"><span data-audio-label data-ru="Включить музыку" data-en="Play music">Включить музыку</span></button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<section class="card profile-heatmap-card">
+  <div class="section-heading"><div><p class="eyebrow" data-ru="РИТМ ОБУЧЕНИЯ" data-en="LEARNING RHYTHM">РИТМ ОБУЧЕНИЯ</p><h2 data-ru="Активность за 90 дней" data-en="Activity over 90 days">Активность за 90 дней</h2></div><span class="badge badge-gold">{{ active_days }} дн.</span></div>
+  <div class="heatmap-legend"><span>Меньше</span><i class="activity-level-0"></i><i class="activity-level-1"></i><i class="activity-level-2"></i><i class="activity-level-3"></i><i class="activity-level-4"></i><span>Больше</span></div>
+  <div class="profile-heatmap">
+    {% for day in heatmap_days %}<div class="activity-cell activity-level-{{ day.level }}" title="{{ day.date|date:'d.m.Y' }}: {{ day.count }} действий" aria-label="{{ day.date|date:'d.m.Y' }}: {{ day.count }} действий"></div>{% endfor %}
+  </div>
+</section>
+{% endblock %}

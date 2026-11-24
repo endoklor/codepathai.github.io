@@ -1,0 +1,86 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>{% block title %}CodePath AI{% endblock %}</title>
+  <meta name="theme-color" content="#0d0308">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=5">
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-burgundy-mesh">
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="{% url 'home' %}" aria-label="CodePath AI — главная">
+        <span class="brand-mark" aria-hidden="true">&lt;/&gt;</span>
+        <span class="brand-copy">
+          <span class="brand-name">CodePath <b>AI</b></span>
+          <span class="brand-subtitle" data-ru="ПЛАТФОРМА ОБУЧЕНИЯ" data-en="LEARNING PLATFORM">ПЛАТФОРМА ОБУЧЕНИЯ</span>
+        </span>
+      </a>
+      <nav class="desktop-nav" aria-label="Основная навигация">
+        <a class="nav-link{% if request.resolver_match.url_name == 'home' %} is-active{% endif %}" href="{% url 'home' %}">
+          <span class="nav-icon" aria-hidden="true">⌂</span> <span data-ru="Главная" data-en="Home">Главная</span>
+        </a>
+        <a class="nav-link{% if request.resolver_match.url_name == 'language_list' or request.resolver_match.url_name == 'language_detail' or request.resolver_match.url_name == 'course_detail' or request.resolver_match.url_name == 'lesson_detail' %} is-active{% endif %}" href="{% url 'language_list' %}">
+          <span class="nav-icon" aria-hidden="true">▤</span> <span data-ru="Курсы" data-en="Courses">Курсы</span>
+        </a>
+        {% if user.is_authenticated %}
+          <a class="nav-link{% if request.resolver_match.url_name == 'profile' %} is-active{% endif %}" href="{% url 'profile' %}">
+          <span class="nav-icon" aria-hidden="true">◉</span> <span data-ru="Профиль" data-en="Profile">Профиль</span>
+          </a>
+        {% endif %}
+      </nav>
+      <div class="header-actions">
+        {% if user.is_authenticated %}
+          <span class="account-chip">{{ user.username }}</span>
+          <button class="btn btn-quiet btn-small audio-header-button" type="button" data-audio-toggle onclick="toggleAmbientAudio(this)" aria-label="Включить фоновую музыку" aria-pressed="false"><span class="audio-note" aria-hidden="true">♫</span><span data-audio-label data-ru="Музыка" data-en="Music">Музыка</span></button>
+          <form action="{% url 'logout' %}" method="post" class="logout-form">
+            {% csrf_token %}
+            <button class="btn btn-quiet btn-small" type="submit" data-ru="Выйти" data-en="Log out">Выйти</button>
+          </form>
+        {% else %}
+          <a class="btn btn-quiet btn-small" href="{% url 'login' %}" data-ru="Войти" data-en="Log in">Войти</a>
+          <a class="btn btn-primary btn-small" href="{% url 'register' %}" data-ru="Регистрация" data-en="Sign up">Регистрация</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <main class="container page-wrap">
+    {% if messages %}
+      <ul class="messages" aria-live="polite">
+        {% for message in messages %}
+          <li class="message {{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <nav class="mobile-nav" aria-label="Мобильная навигация">
+    <a class="mobile-nav-link{% if request.resolver_match.url_name == 'home' %} is-active{% endif %}" href="{% url 'home' %}">
+      <span aria-hidden="true">⌂</span><small data-ru="Главная" data-en="Home">Главная</small>
+    </a>
+    <a class="mobile-nav-link{% if request.resolver_match.url_name == 'language_list' or request.resolver_match.url_name == 'language_detail' or request.resolver_match.url_name == 'course_detail' or request.resolver_match.url_name == 'lesson_detail' %} is-active{% endif %}" href="{% url 'language_list' %}">
+      <span aria-hidden="true">▤</span><small data-ru="Курсы" data-en="Courses">Курсы</small>
+    </a>
+    {% if user.is_authenticated %}
+      <a class="mobile-nav-link{% if request.resolver_match.url_name == 'profile' %} is-active{% endif %}" href="{% url 'profile' %}">
+      <span aria-hidden="true">◉</span><small data-ru="Профиль" data-en="Profile">Профиль</small>
+      </a>
+    {% else %}
+      <a class="mobile-nav-link{% if request.resolver_match.url_name == 'login' %} is-active{% endif %}" href="{% url 'login' %}">
+      <span aria-hidden="true">↗</span><small data-ru="Войти" data-en="Log in">Войти</small>
+      </a>
+    {% endif %}
+  </nav>
+
+  <div class="toast-stack" id="toastContainer" aria-live="polite" aria-atomic="false"></div>
+  <script src="{% static 'js/main.js' %}?v=5"></script>
+</body>
+</html>

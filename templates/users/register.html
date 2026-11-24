@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}Регистрация — CodePath AI{% endblock %}
+{% block content %}
+<div class="card auth-card">
+  <p class="eyebrow">НАЧНИТЕ СЕГОДНЯ</p>
+  <h1>Создать аккаунт</h1>
+  <p class="auth-intro">Сохраните прогресс и проходите уроки в удобном темпе.</p>
+  <form class="styled" method="post">
+    {% csrf_token %}
+    {% for field in form %}
+      <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+      {{ field }}
+      {% for error in field.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+    {% endfor %}
+    <button class="btn" type="submit" style="width:100%;">Создать аккаунт <span aria-hidden="true">→</span></button>
+  </form>
+  <p class="auth-switch">Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a></p>
+</div>
+{% endblock %}

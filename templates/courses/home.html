@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% block title %}Главная — CodePath AI{% endblock %}
+{% block content %}
+<section class="dashboard-intro">
+  <div>
+    <p class="eyebrow" data-ru="ВАШ ПУТЬ В ПРОГРАММИРОВАНИИ" data-en="YOUR CODING JOURNEY">ВАШ ПУТЬ В ПРОГРАММИРОВАНИИ</p>
+    <h1>С возвращением, {{ user.first_name|default:user.username }} <span aria-hidden="true">👋</span></h1>
+    <p class="lead" data-ru="Продолжайте обучение, запускайте код и следите за своим прогрессом." data-en="Keep learning, run code, and track your progress.">Продолжайте обучение, запускайте код и следите за своим прогрессом.</p>
+  </div>
+  <a class="btn btn-secondary" href="{% url 'language_list' %}"><span data-ru="Открыть каталог" data-en="Open catalog">Открыть каталог</span> <span aria-hidden="true">→</span></a>
+</section>
+
+<section class="stats-grid" aria-label="Статистика пользователя">
+  <article class="stat-card"><div class="label" data-ru="УРОВЕНЬ" data-en="LEVEL">УРОВЕНЬ</div><div class="value">{{ profile.level }}</div><div class="hint" data-ru="Ваш текущий ранг" data-en="Your current rank">Ваш текущий ранг</div></article>
+  <article class="stat-card"><div class="label" data-ru="ОПЫТ" data-en="EXPERIENCE">ОПЫТ</div><div class="value">{{ profile.xp }} <small>XP</small></div><div class="hint" data-ru="Очки за задания и уроки" data-en="Points from tasks and lessons">Очки за задания и уроки</div></article>
+  <article class="stat-card"><div class="label" data-ru="СЕРИЯ ДНЕЙ" data-en="DAY STREAK">СЕРИЯ ДНЕЙ</div><div class="value">{{ profile.streak }} <small>🔥</small></div><div class="hint" data-ru="Уроков пройдено: {{ completed_lessons }}" data-en="Lessons completed: {{ completed_lessons }}">Уроков пройдено: {{ completed_lessons }}</div></article>
+</section>
+
+<section class="hero-panel">
+  <div class="hero-content">
+    {% if continue_lesson %}
+      <span class="badge badge-accent">{{ continue_lesson.course.language.name }} · {{ continue_lesson.course.get_level_display }}</span>
+      <h2 data-ru="Продолжить обучение" data-en="Continue learning">Продолжить обучение</h2>
+      <p>Урок {{ continue_lesson_number }}. {{ continue_lesson.title }}</p>
+    {% else %}
+      <span class="badge badge-accent">CODEPATH AI</span>
+      <h2>Вы прошли все доступные уроки</h2>
+      <p>Посмотрите каталог — там могут появиться новые программы.</p>
+    {% endif %}
+  </div>
+  <div class="hero-aside">
+    {% if continue_lesson %}
+      <div class="hero-progress">
+        <div class="hero-progress-top"><span>Прогресс курса</span><strong>{{ continue_course_progress }}%</strong></div>
+        <div class="progress-bar"><div class="fill" style="width:{{ continue_course_progress }}%;"></div></div>
+      </div>
+      <button class="btn" type="button" onclick="openLessonPreview()"><span data-ru="Продолжить урок" data-en="Continue lesson">Продолжить урок</span> <span aria-hidden="true">→</span></button>
+      <a class="btn btn-secondary dashboard-course-link" href="{% url 'course_detail' continue_lesson.course.id %}" data-ru="Все уроки курса" data-en="All course lessons">Все уроки курса</a>
+    {% else %}
+      <a class="btn" href="{% url 'language_list' %}">Каталог курсов <span aria-hidden="true">→</span></a>
+    {% endif %}
+  </div>
+</section>
+
+<section class="dashboard-tools" aria-label="Практика и задание дня">
+  <article class="card sandbox-card">
+    <div class="tool-heading">
+    <div><p class="eyebrow">PYTHON 3</p><h2 data-ru="Песочница кода" data-en="Code sandbox">Песочница кода</h2></div>
+      <span class="badge" data-ru="Код выполняется в браузере" data-en="Code runs in your browser">Код выполняется в браузере</span>
+    </div>
+    <label class="visually-hidden" for="sandboxEditor">Код Python</label>
+    <textarea id="sandboxEditor" class="code-editor sandbox-editor" rows="9" spellcheck="false" autocomplete="off" autocapitalize="off" data-placeholder-ru="Напишите код Python…" data-placeholder-en="Write Python code…" placeholder="Напишите код Python…">print("Привет, CodePath AI!")
+
+for number in range(1, 4):
+    print("Урок", number)</textarea>
+    <div class="sandbox-actions">
+      <button class="btn" type="button" id="runSandboxButton" onclick="runPythonSandbox()" data-ru="▶ Запустить код" data-en="▶ Run code">▶ Запустить код</button>
+      <button class="btn btn-secondary" type="button" onclick="resetSandboxCode()" data-ru="Сбросить" data-en="Reset">Сбросить</button>
+      <span id="sandboxStatus" class="muted" role="status" aria-live="polite">Готово</span>
+    </div>
+    <div class="sandbox-console" aria-label="Результат выполнения">
+      <div class="console-label" data-ru="КОНСОЛЬ ВЫВОДА" data-en="OUTPUT CONSOLE">КОНСОЛЬ ВЫВОДА</div>
+      <pre id="sandboxOutput">Нажмите «Запустить код», чтобы увидеть результат.</pre>
+    </div>
+  </article>
+
+  <article class="card daily-challenge-card">
+    <div class="tool-heading">
+      <div><p class="eyebrow" data-ru="ЕЖЕДНЕВНАЯ ПРАКТИКА" data-en="DAILY PRACTICE">ЕЖЕДНЕВНАЯ ПРАКТИКА</p><h2 data-ru="Задание дня" data-en="Daily challenge">Задание дня</h2></div>
+      <span class="badge badge-gold">+50 XP</span>
+    </div>
+    {% if daily_challenge %}
+      <p class="muted" data-ru="Задание выбрано из программы Python. Решение проверяется сервером." data-en="Today's challenge comes from the Python course. Your answer is checked by the site.">Задание выбрано из программы Python. Решение проверяется сервером.</p>
+      <div class="daily-question">
+        <span class="challenge-topic">{{ daily_challenge.lesson.course.get_level_display }} · {{ daily_challenge.lesson.title }}</span>
+        <p>{{ daily_challenge.question }}</p>
+        {% if daily_challenge.hint %}<details><summary>Подсказка</summary><p>{{ daily_challenge.hint }}</p></details>{% endif %}
+      </div>
+      {% if daily_challenge_solved %}
+        <div class="challenge-complete" role="status" data-ru="✓ Задание дня решено. Ваши +50 XP уже начислены. Новое задание появится завтра." data-en="✓ Challenge complete. Your +50 XP has been added. A new challenge arrives tomorrow.">✓ Задание дня решено. Ваши +50 XP уже начислены. Новое задание появится завтра.</div>
+      {% else %}
+        <form class="daily-challenge-form" method="post" action="{% url 'daily_challenge_submit' %}">
+          {% csrf_token %}<input type="hidden" name="task_id" value="{{ daily_challenge.id }}">
+          {% if daily_challenge.is_code_task %}
+            <label class="code-editor-label" for="daily-challenge-answer" data-ru="Ваш код" data-en="Your code">Ваш код</label>
+            <textarea id="daily-challenge-answer" class="code-editor" name="answer" rows="6" data-placeholder-ru="Напишите решение…" data-placeholder-en="Write your solution…" placeholder="Напишите решение…" spellcheck="false" required></textarea>
+            <p class="code-editor-help">Tab вставляет отступ в четыре пробела.</p>
+          {% else %}
+            <label for="daily-challenge-answer" data-ru="Ваш ответ" data-en="Your answer">Ваш ответ</label>
+            <input id="daily-challenge-answer" type="text" name="answer" data-placeholder-ru="Введите ответ…" data-placeholder-en="Enter your answer…" placeholder="Введите ответ…" required>
+          {% endif %}
+          <button class="btn btn-gold" type="submit" data-ru="Проверить ответ" data-en="Check answer">Проверить ответ</button>
+        </form>
+      {% endif %}
+    {% else %}
+      <div class="empty-state">Добавьте задания к урокам Python, чтобы здесь появилось ежедневное упражнение.</div>
+    {% endif %}
+  </article>
+</section>
+
+<section>
+  <div class="section-heading">
+    <div><p class="eyebrow">PYTHON</p><h2 data-ru="Ваши курсы" data-en="Your courses">Ваши курсы</h2></div>
+    <span class="badge badge-accent">{{ python_course_rows|length }} программ с уроками</span>
+  </div>
+  <div class="course-grid">
+    {% for row in python_course_rows %}
+      <a class="card-link" href="{% url 'course_detail' row.course.id %}">
+        <article class="course-card glass-card-hover">
+          <div class="course-card-top"><div><span class="badge badge-accent">{{ row.course.language.name }}</span><h3>{{ row.course.get_level_display }}</h3></div><span class="course-icon" aria-hidden="true">{{ row.course.language.icon|default:'⌘' }}</span></div>
+          <p>{{ row.course.description }}</p>
+          <div class="course-card-meta"><span>{{ row.course.lessons.count }} уроков</span><strong>{{ row.progress }}%</strong></div>
+          <div class="progress-bar"><div class="fill" style="width:{{ row.progress }}%;"></div></div>
+          <div class="course-card-footer"><span class="muted">Посмотреть программу</span><span aria-hidden="true">↗</span></div>
+        </article>
+      </a>
+    {% empty %}<div class="empty-state">Курсы Python скоро появятся в каталоге.</div>{% endfor %}
+  </div>
+</section>
+
+<section class="grid cols-2 dashboard-lower">
+  <article class="card activity-card">
+    <div class="section-heading"><div><p class="eyebrow" data-ru="АКТИВНОСТЬ" data-en="ACTIVITY">АКТИВНОСТЬ</p><h3 data-ru="Последние уроки" data-en="Recent lessons">Последние уроки</h3></div><span class="badge" data-ru="Из вашего прогресса" data-en="From your progress">Из вашего прогресса</span></div>
+    {% if recent_progress %}
+      <ul class="lesson-list">
+        {% for item in recent_progress %}<li><div class="lesson-row-main"><span class="lesson-number">✓</span><span class="lesson-title">{{ item.lesson.title }}<small>{{ item.lesson.course.language.name }} · {{ item.completed_at|date:"d.m.Y H:i" }}</small></span></div><span class="badge badge-accent">Пройден</span></li>{% endfor %}
+      </ul>
+    {% else %}<div class="empty-state">Пройдите первый урок — здесь появится ваша активность.</div>{% endif %}
+  </article>
+
+  <article class="card heatmap-card">
+    <div class="section-heading"><div><p class="eyebrow" data-ru="ПОСЛЕДНИЕ 12 НЕДЕЛЬ" data-en="LAST 12 WEEKS">ПОСЛЕДНИЕ 12 НЕДЕЛЬ</p><h3 data-ru="Карта активности" data-en="Activity map">Карта активности</h3></div><span class="badge badge-gold">{{ active_days }} дн.</span></div>
+    <div class="heatmap-legend"><span data-ru="Меньше" data-en="Less">Меньше</span><i class="activity-level-0"></i><i class="activity-level-1"></i><i class="activity-level-2"></i><i class="activity-level-3"></i><i class="activity-level-4"></i><span data-ru="Больше" data-en="More">Больше</span></div>
+    <div class="dashboard-heatmap" id="dashboardHeatmap" aria-label="Активность по дням за 12 недель">
+      {% for cell in heatmap_days %}<button class="activity-cell activity-level-{{ cell.level }}" type="button" data-date="{{ cell.date|date:'d.m.Y' }}" data-count="{{ cell.count }}" title="{{ cell.date|date:'d.m.Y' }}: {{ cell.count }} действий" aria-label="{{ cell.date|date:'d.m.Y' }}: {{ cell.count }} действий"></button>{% endfor %}
+    </div>
+    <p class="heatmap-detail" id="heatmapDetail" aria-live="polite" data-ru="Наведите на ячейку или выберите день" data-en="Hover or select a day">Наведите на ячейку или выберите день</p>
+  </article>
+</section>
+
+{% if lesson_preview %}
+  <div id="lessonPreviewModal" class="preview-backdrop" hidden role="presentation" onclick="closeLessonPreview(event)">
+    <section class="preview-dialog" role="dialog" aria-modal="true" aria-labelledby="previewTitle" aria-describedby="previewSubtitle" tabindex="-1">
+      <div class="preview-header"><div><p class="eyebrow" id="previewSubtitle"></p><h2 id="previewTitle"></h2></div><button class="preview-close" type="button" onclick="closeLessonPreview()" aria-label="Закрыть окно">×</button></div>
+      <div class="preview-content" id="previewContent"></div>
+      <div class="preview-actions"><button class="btn btn-secondary" type="button" onclick="closeLessonPreview()">Закрыть</button><a class="btn" id="previewOpenLesson" href="#">Открыть урок и задания →</a></div>
+    </section>
+  </div>
+  {{ lesson_preview|json_script:'lesson-preview-data' }}
+{% endif %}
+{% endblock %}

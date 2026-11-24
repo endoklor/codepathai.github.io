@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}{{ language.name }} — CodePath AI{% endblock %}
+{% block content %}
+<div class="breadcrumb"><a href="{% url 'language_list' %}">Каталог курсов</a><span aria-hidden="true">/</span><span>{{ language.name }}</span></div>
+
+<section class="page-heading">
+  <div class="page-heading-copy">
+    <p class="eyebrow">ЯЗЫК ПРОГРАММИРОВАНИЯ</p>
+    <h1>{{ language.icon }} {{ language.name }}</h1>
+    <p class="lead">{{ language.description }}</p>
+  </div>
+  <a class="btn btn-secondary" href="{% url 'language_list' %}"><span aria-hidden="true">←</span> Все языки</a>
+</section>
+
+<div class="course-grid">
+  {% for row in course_rows %}
+    <a class="card-link" href="{% url 'course_detail' row.course.id %}">
+      <article class="course-card glass-card-hover">
+        <div class="course-card-top">
+          <div>
+            <span class="badge badge-accent">УРОВЕНЬ</span>
+            <h2>{{ row.course.get_level_display }}</h2>
+          </div>
+          <span class="course-icon" aria-hidden="true">{{ language.icon|default:'⌘' }}</span>
+        </div>
+        <p>{{ row.course.description }}</p>
+        <div class="course-card-meta">
+          <span>{{ row.course.lessons.count }} уроков</span>
+          {% if user.is_authenticated %}<strong>{{ row.progress }}%</strong>{% endif %}
+        </div>
+        {% if user.is_authenticated %}<div class="progress-bar"><div class="fill" style="width:{{ row.progress }}%;"></div></div>{% endif %}
+        <div class="course-card-footer"><span class="muted">Открыть программу</span><span aria-hidden="true">↗</span></div>
+      </article>
+    </a>
+  {% empty %}
+    <div class="empty-state">Для этого языка пока нет доступных курсов.</div>
+  {% endfor %}
+</div>
+{% endblock %}

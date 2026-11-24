@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}{{ course }} — CodePath AI{% endblock %}
+{% block content %}
+<div class="breadcrumb">
+  <a href="{% url 'language_list' %}">Каталог курсов</a><span aria-hidden="true">/</span>
+  <a href="{% url 'language_detail' course.language.slug %}">{{ course.language.name }}</a><span aria-hidden="true">/</span>
+  <span>{{ course.get_level_display }}</span>
+</div>
+
+<section class="page-heading">
+  <div class="page-heading-copy">
+    <p class="eyebrow">{{ course.language.name }} · ПРОГРАММА</p>
+    <h1>{{ course.get_level_display }}</h1>
+    <p class="lead">{{ course.description }}</p>
+  </div>
+  <a class="btn btn-secondary" href="{% url 'language_detail' course.language.slug %}"><span aria-hidden="true">←</span> К уровням</a>
+</section>
+
+<section class="card course-overview">
+  <div class="course-card-meta">
+    <span>{{ course.lessons.count }} уроков</span>
+    <strong>{{ progress_percent }}% пройдено</strong>
+  </div>
+  <div class="progress-bar"><div class="fill" style="width:{{ progress_percent }}%;"></div></div>
+</section>
+
+{% regroup lesson_rows by lesson.block_title as block_list %}
+{% for block in block_list %}
+  <section class="card lesson-section">
+    {% if block.grouper %}<div class="section-heading"><div><p class="eyebrow">РАЗДЕЛ КУРСА</p><h2>{{ block.grouper }}</h2></div></div>{% endif %}
+    <ul class="lesson-list">
+      {% for row in block.list %}
+        <li class="lesson-row{% if not row.unlocked %} is-locked{% endif %}">
+          <div class="lesson-row-main">
+            <span class="lesson-number">{{ row.number }}</span>
+            <span class="lesson-title">
+              {% if row.unlocked %}
+                <a href="{% url 'lesson_detail' row.lesson.id %}">{{ row.lesson.title }}</a>
+              {% else %}
+                {{ row.lesson.title }}
+              {% endif %}
+              <small>Урок {{ row.number }}{% if not row.unlocked %} · сначала завершите предыдущий урок{% endif %}</small>
+            </span>
+          </div>
+          {% if row.completed %}
+            <span class="badge badge-accent">✓ Пройден</span>
+          {% elif row.unlocked %}
+            <span class="badge badge-gold">+{{ row.lesson.xp_reward }} XP</span>
+          {% else %}
+            <span class="badge">🔒 Закрыт</span>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+{% empty %}
+  <div class="empty-state">В этом курсе пока нет уроков.</div>
+{% endfor %}
+{% endblock %}
